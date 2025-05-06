@@ -212,30 +212,60 @@ async def generate_questions(request: QuestionsRequest = Body(...)):
     if not model:
         raise HTTPException(status_code=500, detail="Gemini API yapılandırılamadığı için sorular oluşturulamıyor.")
 
-    prompt = f"""Bana {request.topic} konusu hakkında {request.level} seviyesinde {request.number} tane boşluk doldurmalı soru hazırlamanı istiyorum. 
-    Ve bundan sonra tüm sorular bittikten sonra alta da çözümlerini yazmanı istiyorum.
-    
-    Lütfen yanıtını şu formatta ver:
-    
-    SORULAR:
-    1. [Soru metni]
-    2. [Soru metni]
-    ...
-    
-    ÇÖZÜMLER:
-    1. [Çözüm]
-    2. [Çözüm]
-    ..."""
+    prompt = f"""Bana "{request.topic}" konusu hakkında {request.level} seviyesinde {request.number} tane boşluk doldurmalı soru hazırlamanı istiyorum. 
+      Sorulardaki boşlukları "___" (üç alt çizgi) ile belirt.
+      Tüm sorular bittikten sonra, "ÇÖZÜMLER:" başlığı altında her sorunun cevabını (sadece boşluğa gelecek kelimeyi/kelimeleri) listele.
+
+      Lütfen yanıtını SADECE şu formatta ver, öncesinde veya sonrasında BAŞKA HİÇBİR AÇIKLAMA EKLEME:
+
+      SORULAR:
+      1. [Soru metni içinde ___ ile boşluk]
+      2. [Soru metni içinde ___ ile boşluk]
+      ...
+
+      ÇÖZÜMLER:
+      1. [Sadece 1. sorudaki boşluğa gelecek cevap]
+      2. [Sadece 2. sorudaki boşluğa gelecek cevap]
+      ...
+
+      Örnek:
+      SORULAR:
+      1. Python'da bir fonksiyon tanımlamak için ___ anahtar kelimesi kullanılır.
+      2. HTML, ___ için kullanılan bir işaretleme dilidir.
+
+      ÇÖZÜMLER:
+      1. def
+      2. web sayfaları oluşturmak
+      """
 
     try:
+        print(f"Soru oluşturma isteği: Konu='{request.topic}', Seviye='{request.level}', Sayı='{request.number}'")
+        # GenerationConfig ile maksimum output token sayısını ayarlayabiliriz, çok uzun cevapları engellemek için
+        # generation_config = genai.types.GenerationConfig(max_output_tokens=1024)
+        # response = model.generate_content(prompt, generation_config=generation_config)
         response = model.generate_content(prompt)
-        return {"questions_and_answers": response.text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Sorular oluşturulurken hata: {e}")
 
-@app.get("/")
-async def read_root():
-    return FileResponse("questions.html")
+        print("Gemini'den soru yanıtı alındı.")
+        # print(f"Ham yanıt:\n{response.text}") # Debug için gerekirse açılabilir
+
+        # Cevapta bazen Markdown ``` bulunabilir, temizleyelim.
+        cleaned_text = response.text.strip()
+        if cleaned_text.startswith("```json"):  # Bazen model JSON formatında gibi başlar
+            cleaned_text = cleaned_text[len("```json"):].strip()
+        if cleaned_text.startswith("```"):
+            cleaned_text = cleaned_text[len("```"):].strip()
+        if cleaned_text.endswith("```"):
+            cleaned_text = cleaned_text[:-len("```")].strip()
+
+        return {"questions_and_answers": cleaned_text}
+    except Exception as e:
+        print(f"HATA: Sorular için Gemini API çağrısı sırasında bir hata oluştu: {e}")
+        # Daha detaylı hata loglaması
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500,
+                            detail=f"Sorular oluşturulurken yapay zeka modeliyle iletişimde hata: {str(e)}")
+
 
 # Ana Uygulamayı Çalıştırma (Aynı)
 if __name__ == "__main__":
