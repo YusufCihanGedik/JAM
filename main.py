@@ -57,6 +57,11 @@ class AssistantRequest(BaseModel):
 class AssistantResponse(BaseModel):
     answer: str
 
+class QuestionsRequest(BaseModel):
+    topic: str
+    level: str
+    number: int
+
 
 # --- Prompt Fonksiyonları ---
 
@@ -200,6 +205,37 @@ async def ask_assistant(request: AssistantRequest = Body(...)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Asistanla iletişimde hata: {e}")
+
+# --Boşluk doldurma soruları oluşturma metodu
+@app.post("/generate-questions")
+async def generate_questions(request: QuestionsRequest = Body(...)):
+    if not model:
+        raise HTTPException(status_code=500, detail="Gemini API yapılandırılamadığı için sorular oluşturulamıyor.")
+
+    prompt = f"""Bana {request.topic} konusu hakkında {request.level} seviyesinde {request.number} tane boşluk doldurmalı soru hazırlamanı istiyorum. 
+    Ve bundan sonra tüm sorular bittikten sonra alta da çözümlerini yazmanı istiyorum.
+    
+    Lütfen yanıtını şu formatta ver:
+    
+    SORULAR:
+    1. [Soru metni]
+    2. [Soru metni]
+    ...
+    
+    ÇÖZÜMLER:
+    1. [Çözüm]
+    2. [Çözüm]
+    ..."""
+
+    try:
+        response = model.generate_content(prompt)
+        return {"questions_and_answers": response.text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Sorular oluşturulurken hata: {e}")
+
+@app.get("/")
+async def read_root():
+    return FileResponse("questions.html")
 
 # Ana Uygulamayı Çalıştırma (Aynı)
 if __name__ == "__main__":
