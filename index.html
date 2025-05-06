@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Öğrenme Planı Oluşturucu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Yapay Zeka Destekli Öğrenme Planı Oluşturucu</h1>
+
+        <form id="plan-form">
+             <!-- ... (Form içeriği aynı) ... -->
+             <div class="form-group">
+                <label for="topic">Öğrenmek İstediğiniz Konu:</label>
+                <input type="text" id="topic" name="topic" placeholder="Örn: Python Programlama, Web Geliştirme Temelleri" required>
+            </div>
+
+            <div class="form-group">
+                <label for="duration">Ne Kadar Sürede Öğrenmek İstiyorsunuz?</label>
+                <input type="text" id="duration" name="duration" placeholder="Örn: 2 Hafta, 1 Ay, 15 Gün" required>
+            </div>
+
+            <div class="form-group">
+                <label for="level">Mevcut Seviyeniz:</label>
+                <select id="level" name="level">
+                    <option value="Başlangıç" selected>Başlangıç</option>
+                    <option value="Orta">Orta</option>
+                    <option value="İleri">İleri</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submit-button">Öğrenme Planı Oluştur</button>
+        </form>
+
+        <div id="loading" class="hidden">
+            <p>Planınız oluşturuluyor, lütfen bekleyin...</p>
+            <div class="spinner"></div>
+        </div>
+
+        <div id="error-message" class="error hidden"></div>
+
+        <!-- Öğrenme Planı Sonuçları -->
+        <div id="plan-result">
+            <!-- Öğrenme planı buraya eklenecek -->
+        </div>
+    </div>
+
+    <!-- Chatbot Konteyneri (Başlangıçta gizli) -->
+    <div id="chatbot-container" class="chatbot-popup hidden">  <!-- Sınıf adı değişti -->
+        <div id="chatbot-header">
+            <h3>AI Öğrenme Asistanı</h3>
+            <button id="close-chatbot" title="Kapat">X</button>
+        </div>
+        <div id="chatbot-messages">
+            <!-- Mesajlar buraya eklenecek -->
+        </div>
+         <div id="chatbot-context" class="hidden">Bağlam: <span></span></div>
+         <div id="ai-typing" class="hidden ai-message"><i>AI yazıyor...</i></div> <!-- Yazıyor göstergesi -->
+        <div id="chatbot-input-container">
+            <input type="text" id="chatbot-input" placeholder="Sorunu buraya yaz...">
+            <button id="chatbot-send">Gönder</button>
+        </div>
+    </div>
+
+    <!-- Floating Chatbot Açma Butonu -->
+    <button id="open-chatbot-button" class="chatbot-fab" title="AI Asistanı Aç">
+        🤖 <!-- Basit bir emoji ikon -->
+    </button>
+
+
+    <script src="script.js"></script>
+</body>
+</html>
